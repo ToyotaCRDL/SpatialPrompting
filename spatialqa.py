@@ -3,7 +3,7 @@
 import os
 import argparse
 import csv
-from spatial_embedding import ImageBasedSpatialEmbedding
+from spatial_feature import SpatialFeature
 import numpy as np
 import torch
 import torch.nn as nn
@@ -47,31 +47,6 @@ class LLM:
             
             import google.generativeai as genai
             genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-            
-        elif self.model.startswith("meta"):
-            
-            from transformers import MllamaForConditionalGeneration, AutoProcessor
-            from transformers import BitsAndBytesConfig
-            token = os.environ["HF_TOKEN"]
-            model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
-    )
-
-    model = MllamaForConditionalGeneration.from_pretrained(
-        model_id,
-        token=token,
-        #torch_dtype=torch.bfloat16,
-        quantization_config=bnb_config,
-    ).to("cuda")
-    processor = AutoProcessor.from_pretrained(model_id)
-
-            
-        self.tools = []
-        self.callables = {}
-
     
     def __call__(self, messages):
 
@@ -152,7 +127,7 @@ class LLM:
 
 class SpatialQA:
 
-    def __init__(self, model, spatial_embedding, args, obj=None):
+    def __init__(self, model, spatial_feature, args, obj=None):
         
         self.llm = LLM(model)
 
@@ -170,16 +145,16 @@ class SpatialQA:
                 }
             ]
         
-        self.spatial_embedding = spatial_embedding
+        self.spatial_feature = spatial_feature
         
         if args.nomerge:
-            indices = np.linspace(0, len(self.spatial_embedding.image_paths) - 1, args.image_num, dtype=int)
+            indices = np.linspace(0, len(self.spatial_feature.image_paths) - 1, args.image_num, dtype=int)
             self.keyfeatures = {
-                "camera_poses": self.spatial_embedding.camera_poses[indices],
-                "image_paths": [self.spatial_embedding.image_paths[i] for i in indices],
+                "camera_poses": self.spatial_feature.camera_poses[indices],
+                "image_paths": [self.spatial_feature.image_paths[i] for i in indices],
             }
         else:
-            self.keyfeatures = self.spatial_embedding.merge_features(merge_dist=args.merge_dist, merge_sim=args.merge_sim, max_features=args.image_num)
+            self.keyfeatures = self.spatial_feature.merge_features(alpha=args.alpha, beta=args.beta, max_features=args.image_num)
         
         self.images = []
         self.depths = []
@@ -246,16 +221,16 @@ class SpatialQA:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--llm", default="meta-llama/Llama-3.2-11B-Vision-Instruct")
-    parser.add_argument("-emb", "--embedding", help="path to spatial embedding")
+    parser.add_argument("-feat", "--feature", help="path to spatial embedding")
     parser.add_argument("--image_num", type=int, default=5)
-    parser.add_argument("--merge_dist", type=float, default=1.0)
-    parser.add_argument("--merge_sim", type=float, default=0.8)
+    parser.add_argument("--alpha", type=float, default=5.0)
+    parser.add_argument("--beta", type=float, default=1.0)
     parser.add_argument("--nomerge", action="store_true")
     parser.add_argument("--nopose", action="store_true")
     parser.add_argument("--noannotation", action="store_true")
     args = parser.parse_args()
     
-    se = ImageBasedSpatialEmbedding.load(args.embedding)
+    se = SpatialFeature.load(args.feature)
     sqa = SpatialQA(args.llm, se, args)
 
     if not args.noannotation:

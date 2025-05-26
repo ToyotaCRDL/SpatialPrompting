@@ -7,7 +7,7 @@ import collections
 import numpy as np
 import torch
 
-from spatial_embedding import ImageBasedSpatialEmbedding
+from spatial_feature import SpatialFeature
 from spatialqa import SpatialQA
 
 from easydict import EasyDict
@@ -34,9 +34,9 @@ def predict(gold_data, sefile, outputfile, common_answer, args):
 
             # make prediction
             if scene_id != current_scene_id:
-                print(f"load spatial embedding of {scene_id}")
+                print(f"load spatial features of {scene_id}")
                 
-                se = ImageBasedSpatialEmbedding.load(
+                se = SpatialFeature.load(
                     os.path.join(
                         CONF.PATH.SCANNET_SCANS, 
                         scene_id,
@@ -59,8 +59,6 @@ def predict(gold_data, sefile, outputfile, common_answer, args):
                         text += f"{ans[0]}"
                         text += ", "
                     text += "\n\n"
-            
-                #print(text)
             
                 sqa.messages.append({
                     "role": "user",
@@ -131,7 +129,7 @@ def main(args):
         common_answer[qt] = answer_example[qt].most_common()
 
     # prediction
-    sefile = f"image_based_vl_feature_map_{args.model}_no_merge.npz"
+    sefile = f"spatial_features_{args.model}_no_merge.npz"
     
     if not args.zeroshot:
         outputfile = f"results/predict_scanqa_fewshot_{args.llm}_{args.model}_img{args.image_num}"

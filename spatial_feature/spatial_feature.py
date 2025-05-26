@@ -54,14 +54,13 @@ class ResizeDepthImage:
 
         return resized_depth_image
 
-class ImageBasedSpatialEmbedding:
+class SpatialFeature:
     def __init__(self, 
         model = "ViT-L/14", 
         device = "cuda:0", 
-        merge_dist = 1.0, 
-        merge_sim = 0.9,
-        online_merge = True,
-        hierarchical = True,
+        alpha = 5.0, 
+        beta = 1.0,
+        online_merge = False,
         max_feature=1000,
         ):
         
@@ -94,10 +93,9 @@ class ImageBasedSpatialEmbedding:
             self.input_size = self.model.visual.input_resolution
             self.nc = self.model.visual.output_dim
 
-        self.merge_dist = merge_dist
-        self.merge_sim = merge_sim
+        self.alpha = alpha
+        self.beta = beta
         self.online_merge = online_merge
-        self.hierarchical = hierarchical
 
         self.image_paths = []
         self.camera_poses = torch.zeros(0, 4, 4).to(self.device) # (n, 4, 4)
@@ -245,16 +243,15 @@ class ImageBasedSpatialEmbedding:
 
                 # online merge
                 if self.online_merge:
-                    self.merge_features(hierarchical=self.hierarchical)
+                    self.merge_features(alpha=self.alpha, beta=self.beta, max_feature=self.max_feature)
 
     def calc_distance(self):
         
         self.covs = torch.nan_to_num(self.covs, nan=1e-6)
         diff = self.means.unsqueeze(1) - self.means.unsqueeze(0)
         cov_avg = (self.covs.unsqueeze(1) + self.covs.unsqueeze(0)) / 2
-        cov_avg = cov_avg + torch.eye(3).to(self.device).unsqueeze(0).unsqueeze(0) * 1e-2
+        cov_avg = cov_avg + torch.eye(3).to(self.device).unsqueeze(0).unsqueeze(0) * 1e-1
         cov_inv = torch.pinverse(cov_avg)
-        cov_inv = torch.eye(3).to(self.device).unsqueeze(0).unsqueeze(0)
         distances = torch.einsum('...i,...ij,...j->...', diff, cov_inv, diff)
         distances = torch.sqrt(torch.clamp(distances, min=0)) # [n, n]
         distances = torch.nan_to_num(distances, nan=1e-6)
@@ -271,32 +268,25 @@ class ImageBasedSpatialEmbedding:
         return similarity
         
     def calc_priority(self, weight_sharpness):
+
         sign, logdet = torch.linalg.slogdet(self.covs + torch.eye(3).to(self.device).unsqueeze(0) + 1e-6)
         det = sign * torch.exp(logdet) # [n]
         sqrtdet = torch.sqrt(det)                
         diff_det = det.unsqueeze(1) - det.unsqueeze(0) # [n, n]
-                
-        diff_sharpness = self.sharpness.squeeze().unsqueeze(1) - self.sharpness.squeeze().unsqueeze(0) # [n, n]
-        
+        diff_sharpness = self.sharpness.squeeze().unsqueeze(1) - self.sharpness.squeeze().unsqueeze(0) # [n, n]        
         priority = diff_det + weight_sharpness * diff_sharpness
         
         return priority 
 
-    def merge_features(self, merge_dist=None, merge_sim=None, weight_sharpness=1.0, max_features=1000):
+    def merge_features(self, alpha=5.0, beta=1.0, max_features=30):
 
         image_paths = np.array(self.image_paths)
 
-        merge_dist = merge_dist if merge_dist != None else self.merge_dist
-        merge_sim = merge_sim if merge_sim != None else self.merge_sim
-
         distances = self.calc_distance()
         similarity = self.calc_similarity()
-        priority = self.calc_priority(weight_sharpness)
+        priority = self.calc_priority(beta)
 
-        if merge_sim > 0:
-            dist = distances + merge_dist / (1.0 - merge_sim) * (1.0 - similarity) # [n, n]
-        else:
-            dist = 2 * distances
+        dist = distances + alpha * (1.0 - similarity) # [n, n]
         dist.fill_diagonal_(1e6)
         
         keep_mask = torch.ones(self.features.size(0), dtype=torch.bool)
@@ -328,8 +318,8 @@ class ImageBasedSpatialEmbedding:
         
         data = {
             "model": self.model_name,
-            "merge_dist": self.merge_dist,
-            "merge_sim": self.merge_sim,
+            "alpha": self.alpha,
+            "beta": self.beta,
             "online_merge": self.online_merge,
             "camera_poses": self.camera_poses.cpu().numpy(),
             "features": self.features.cpu().numpy(),
@@ -346,11 +336,11 @@ class ImageBasedSpatialEmbedding:
 
         data = np.load(load_file)
 
-        se = ImageBasedSpatialEmbedding(
+        se = SpatialFeature(
             model=str(data["model"]), 
             device=device,
-            merge_dist=float(data["merge_dist"]), 
-            merge_sim=float(data["merge_sim"]),
+            alpha=float(data["alpha"]), 
+            beta=float(data["beta"]),
             online_merge=bool(data["online_merge"]))
 
         se.camera_poses = torch.from_numpy(data["camera_poses"]).to(device)
@@ -363,35 +353,4 @@ class ImageBasedSpatialEmbedding:
         se.image_paths = data["image_paths"].tolist()
 
         return se
-
-    def find_topk(self, query, k=1):
-        
-        if self.model_name == "google/siglip-so400m-patch14-384":
-            text_inputs = self.tokenizer(query)
-            text_features = self.model.text_model(text_inputs)
-        else:
-            text_inputs = torch.cat([self.tokenizer(query)]).to(self.device)
-            text_features = self.clip_model.encode_text(text_inputs)
-        text_features /= (text_features.norm(dim=-1, keepdim=True) + 1e-7)
-        text_features = text_features.float()
-        text_features = text_features.unsqueeze(-1)
-
-        normed_features = self.features / (self.features.norm(dim=1, keepdim=True) + 1e-1)
-        similarity = (normed_features @ text_features).squeeze()
-
-        topk_sims, topk_ids = torch.topk(similarity, k)
-
-        image_paths = np.array(self.image_paths)
-        
-        outputs = {
-            "features": self.features[topk_ids],
-            "means": self.means[topk_ids],
-            "covariances": self.covs[topk_ids],
-            "intrinsics": self.intrinsics[topk_ids],
-            "sharpness": self.sharpness[topk_ids],
-            "similarities": topk_sims,
-            "image_paths": image_paths[topk_ids.cpu().numpy()].tolist()
-        }
-
-        return outputs
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from spatial_embedding import ImageBasedSpatialEmbedding
+from spatial_feature import SpatialFeature
 
 import os
 import sys
@@ -26,7 +26,7 @@ model_name_dict = {
 
 def main(args):
 
-    se = ImageBasedSpatialEmbedding(model=model_name_dict[args.model], online_merge=False)
+    se = SpatialFeature(model=model_name_dict[args.model], online_merge=False)
 
     if args.dataset == "scannet":
         data_dir = os.path.join(args.base_path, "data", dataset_name_dict[args.dataset], "scans", args.env)
@@ -101,13 +101,13 @@ def main(args):
 
     print(se.features.shape)
 
-    save_file = os.path.join(data_dir, f"image_based_vl_feature_map_{args.model}_no_merge.npz")
+    save_file = os.path.join(data_dir, f"spatial_features_{args.model}_no_merge.npz")
     se.save(save_file)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="create_spatial_embedding",
-        usage="Create spatial embeddings from rgbs, depths, and poses.",
+        prog="extract_features",
+        usage="Extract spatial features from rgbs, depths, and poses.",
         add_help=True,
         )
     parser.add_argument("--base_path", help="base path")

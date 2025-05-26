@@ -7,7 +7,7 @@ import collections
 import numpy as np
 import torch
 
-from spatial_embedding import ImageBasedSpatialEmbedding
+from spatial_feature import SpatialFeature
 from spatialqa import SpatialQA
 
 def predict(questions, sefile, outputfile, common_answer, args):
@@ -29,9 +29,9 @@ def predict(questions, sefile, outputfile, common_answer, args):
 
         for scene_id in scene_data.keys():
             
-            print(f"load spatial embedding of {scene_id}")
+            print(f"load spatial features of {scene_id}")
             scannet_path = os.path.join(args.base_path, "data", "ScanNet", "scans")
-            se = ImageBasedSpatialEmbedding.load(os.path.join(
+            se = SpatialFeature.load(os.path.join(
                 scannet_path, 
                 scene_id,
                 sefile), device="cuda:0")
@@ -42,7 +42,7 @@ def predict(questions, sefile, outputfile, common_answer, args):
                 
             
             # Few-shot Prompt
-            if args.fewshot:
+            if not args.zeroshot:
                 text = "Note that the answer for the question based on the situation is as short as possible such as:\n\n"
             
                 for qt in QT:
@@ -69,7 +69,7 @@ def predict(questions, sefile, outputfile, common_answer, args):
                 question=q['question']
                 scene_id=q['scene_id']
 
-                if args.fewshot:
+                if not args.zeroshot:
                     answer = sqa(situation + question)
                 else:
                     answer = sqa(situation + question + "The answer should be a phrase or a single word.")
@@ -130,10 +130,10 @@ def main(args):
         common_answer[qt] = answer_example[qt].most_common()
     
     # prediction
-    sefile = f"image_based_vl_feature_map_{args.model}_no_merge.npz"
+    sefile = f"spatial_features_{args.model}_no_merge.npz"
 
     # fewshot or zeroshot
-    if args.fewshot:
+    if not args.zeroshot:
         outputfile = "results/predict_sqa3d_fewshot"
     else:
         outputfile = "results/predict_sqa3d_zeroshot"
@@ -160,10 +160,10 @@ if __name__ == "__main__":
     parser.add_argument("--image_num", type=int, default=30)
     parser.add_argument("--merge_dist", type=float, default=1.0)
     parser.add_argument("--merge_sim", type=float, default=0.8)
-    parser.add_argument("--fewshot", action='store_true')
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--nomerge", action="store_true")
     parser.add_argument("--nopose", action="store_true")
+    parser.add_argument("--zeroshot", action='store_true')
     args = parser.parse_args()
 
     # reproducibility

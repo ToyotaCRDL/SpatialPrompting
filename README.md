@@ -1,18 +1,19 @@
 # SpatialPrompting
 
-**SpatialPrompting: Keyframe-driven Zero-Shot Spatial Reasoning with Off-the-Shelf Multimodal Large Language Models**
+[**SpatialPrompting: Keyframe-driven Zero-Shot Spatial Reasoning with Off-the-Shelf Multimodal Large Language Models**](http://arxiv.org/abs/2505.04911)
+*Shun Taguchi, Hideki Deguchi, Takumi Hamazaki, and Hiroyuki Sakai*
 
-This repository contains the supplementary source code for the paper. Our method leverages keyframe-driven prompt generation to perform zero-shot spatial reasoning in 3D environments using off-the-shelf multimodal large language models (LLMs) without the need for 3D-specific fine-tuning.
+This repository contains the source code for the [paper](http://arxiv.org/abs/2505.04911). Our method leverages keyframe-driven prompt generation to perform zero-shot spatial reasoning in 3D environments using off-the-shelf multimodal large language models (LLMs) without the need for 3D-specific fine-tuning.
 
 ## Relation to the Paper
 
 The provided code implements the following core components from the paper:
 
-- **Spatial Embedding Generation**
-  The script `create_image_based_spatial_embedding.py` extracts spatial embeddings from RGB images, depth maps, and camera pose information. These embeddings represent the scene and are saved in a specified `.npz` file.
+- **Spatial Feature Extraction**
+  The script `extract_features.py` extracts spatial embeddings from RGB images, depth maps, and camera pose information. These embeddings represent the scene and are saved in a specified `.npz` file.
 
 - **Interactive Spatial Question Answering**
-  The script `spatialqa.py` loads the spatial embeddings and interacts with an LLM to answer spatial questions. It integrates keyframe data and corresponding camera poses into prompts for the LLM.
+  The script `spatialqa.py` loads the spatial features and interacts with an LLM to answer spatial questions. It integrates keyframe data and corresponding camera poses into prompts for the LLM.
 
 - **Dataset Prediction and Evaluation**
   - `predict_scanqa.py` and `predict_sqa3d.py` generate predictions on the ScanQA and SQA3D datasets, respectively.
@@ -60,10 +61,10 @@ Each script is designed to be run from the command line with various options.
 
 ### 1. Generate Spatial Embeddings
 
-Run `create_image_based_spatial_embedding.py` to create image-based spatial embeddings from your dataset:
+Run `extract_features.py` to extract spatial features from your dataset:
 
 ```bash
-python create_image_based_spatial_embedding.py \
+python extract_features.py \
   --base_path /path/to/your/data \
   --dataset scannet \
   --env scene0050_00 \
@@ -74,12 +75,12 @@ This script reads RGB, depth, and pose files from the specified directory and sa
 
 ### 2. Interactive Spatial QA
 
-Run `spatialqa.py` to launch an interactive session that answers spatial questions based on the loaded spatial embeddings:
+Run `spatialqa.py` to launch an interactive session that answers spatial questions based on the loaded spatial features:
 
 ```bash
 python spatialqa.py \
   --llm gpt-4o-2024-11-20 \
-  --embedding /path/to/embedding_file.npz \
+  --feature /path/to/spatial_feature.npz \
   --image_num 30
 ```
 
@@ -109,7 +110,6 @@ python predict_sqa3d.py \
   --llm gpt-4o-2024-11-20 \
   --model vitl336 \
   --image_num 30 \
-  --fewshot
 ```
 
 ### 5. Evaluation
