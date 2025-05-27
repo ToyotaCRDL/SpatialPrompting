@@ -135,7 +135,7 @@ Evaluate the prediction results using the provided scoring scripts:
   python score_sqa3d.py --base_path /path/to/your/data --pred /path/to/prediction.jsonl
   ```
   
-### 6. Citation
+## Citation
 
 If you find this project useful in your research, please consider cite:
 
