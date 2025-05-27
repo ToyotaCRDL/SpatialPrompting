@@ -1,6 +1,4 @@
-# SpatialPrompting
-
-[**SpatialPrompting: Keyframe-driven Zero-Shot Spatial Reasoning with Off-the-Shelf Multimodal Large Language Models**](http://arxiv.org/abs/2505.04911)
+# [**SpatialPrompting: Keyframe-driven Zero-Shot Spatial Reasoning with Off-the-Shelf Multimodal Large Language Models**](http://arxiv.org/abs/2505.04911)
 *Shun Taguchi, Hideki Deguchi, Takumi Hamazaki, and Hiroyuki Sakai*
 
 This repository contains the source code for the [paper](http://arxiv.org/abs/2505.04911). Our method leverages keyframe-driven prompt generation to perform zero-shot spatial reasoning in 3D environments using off-the-shelf multimodal large language models (LLMs) without the need for 3D-specific fine-tuning.
@@ -134,3 +132,16 @@ Evaluate the prediction results using the provided scoring scripts:
   ```bash
   python score_sqa3d.py --base_path /path/to/your/data --pred /path/to/prediction.jsonl
   ```
+  
+### 6. Citation
+
+If you find this project useful in your research, please consider cite:
+
+```
+@article{taguchi2025spatialprompting,
+  title={SpatialPrompting: Keyframe-driven Zero-Shot Spatial Reasoning with Off-the-Shelf Multimodal Large Language Models},
+  author={Taguchi, Shun and Deguchi, Hideki and Hamazaki, Takumi and Sakai, Hiroyuki}
+  journal={arXiv preprint arXiv:2505.04911},
+  year={2025}
+}
+```
