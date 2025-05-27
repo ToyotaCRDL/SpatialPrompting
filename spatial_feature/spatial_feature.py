@@ -287,16 +287,12 @@ class SpatialFeature:
 
     def extract_keyframes(self, alpha=5.0, beta=1.0, max_frames=30):
 
-        print(self.features.shape)
         image_paths = np.array(self.image_paths)
 
         distances = self.calc_distance()
         similarity = self.calc_similarity()
         priority = self.calc_priority(beta)
 
-        print("alpha = " + str(alpha) )
-        print("beta = " + str(beta))
-        
         dist = distances + alpha * (1.0 - similarity) # [n, n]
         dist.fill_diagonal_(1e6)
         

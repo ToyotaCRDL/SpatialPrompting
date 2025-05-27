@@ -141,7 +141,6 @@ class SpatialQA:
                     "role": "user",
                     "content": [
                         "You will be provided images captured from specific camera positions and orientations as follows (z-axis represents up direction):\n"
-                        #"You will be provided with images captured from specific camera positions and orientations as follows:\n"
                     ]
                 }
             ]
@@ -183,13 +182,9 @@ class SpatialQA:
                 camera_prompt = (f"\n**Camera position**: [x={x:.2f}m, y={y:.2f}m, z={z:.2f}m]\n"
                     + f"**Camera rotation**: [x={roll:.1f}°, y={pitch:.1f}°, z={yaw:.1f}°]\n"
                     + "**Image data**: ")
-
                 self.messages[0]["content"].append(camera_prompt)
-                print(camera_prompt)
-
 
             rgb_path = self.keyfeatures["image_paths"][i]
-            print(rgb_path)
             image = Image.open(rgb_path)
             self.images.append(transforms.ToTensor()(image).unsqueeze(0).cuda())
             width, height = image.size
