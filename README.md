@@ -1,6 +1,8 @@
 # [**SpatialPrompting: Keyframe-driven Zero-Shot Spatial Reasoning with Off-the-Shelf Multimodal Large Language Models**](http://arxiv.org/abs/2505.04911)
 *Shun Taguchi, Hideki Deguchi, Takumi Hamazaki, and Hiroyuki Sakai*
 
+![Qualitative Results](assets/qualitative_results.jpg)
+
 This repository contains the source code for the [paper](http://arxiv.org/abs/2505.04911). Our method leverages keyframe-driven prompt generation to perform zero-shot spatial reasoning in 3D environments using off-the-shelf multimodal large language models (LLMs) without the need for 3D-specific fine-tuning.
 
 ## Relation to the Paper
