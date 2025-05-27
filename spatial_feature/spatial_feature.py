@@ -243,14 +243,21 @@ class SpatialFeature:
 
                 # online merge
                 if self.online_merge:
-                    self.merge_features(alpha=self.alpha, beta=self.beta, max_feature=self.max_feature)
+                    merge_features = self.extract_keyframes(alpha=self.alpha, beta=self.beta, max_frames=self.max_feature)
+                    self.camera_poses = merge_features["camera_poses"]
+                    self.features = merge_features["features"]
+                    self.means = merge_features["means"]
+                    self.covs = merge_featuers["covs"]
+                    self.intrinsics = merge_features["intrinsics"]
+                    self.sharpness = merge_features["sharpness"]
+                    self.image_paths = merge_features["image_paths"]
 
     def calc_distance(self):
         
         self.covs = torch.nan_to_num(self.covs, nan=1e-6)
         diff = self.means.unsqueeze(1) - self.means.unsqueeze(0)
         cov_avg = (self.covs.unsqueeze(1) + self.covs.unsqueeze(0)) / 2
-        cov_avg = cov_avg + torch.eye(3).to(self.device).unsqueeze(0).unsqueeze(0) * 1e-1
+        cov_avg = cov_avg + torch.eye(3).to(self.device).unsqueeze(0).unsqueeze(0) * 1e-2
         cov_inv = torch.pinverse(cov_avg)
         distances = torch.einsum('...i,...ij,...j->...', diff, cov_inv, diff)
         distances = torch.sqrt(torch.clamp(distances, min=0)) # [n, n]
@@ -273,24 +280,28 @@ class SpatialFeature:
         det = sign * torch.exp(logdet) # [n]
         sqrtdet = torch.sqrt(det)                
         diff_det = det.unsqueeze(1) - det.unsqueeze(0) # [n, n]
-        diff_sharpness = self.sharpness.squeeze().unsqueeze(1) - self.sharpness.squeeze().unsqueeze(0) # [n, n]        
+        diff_sharpness = self.sharpness.squeeze().unsqueeze(1) - self.sharpness.squeeze().unsqueeze(0) # [n, n]
         priority = diff_det + weight_sharpness * diff_sharpness
         
         return priority 
 
-    def merge_features(self, alpha=5.0, beta=1.0, max_features=30):
+    def extract_keyframes(self, alpha=5.0, beta=1.0, max_frames=30):
 
+        print(self.features.shape)
         image_paths = np.array(self.image_paths)
 
         distances = self.calc_distance()
         similarity = self.calc_similarity()
         priority = self.calc_priority(beta)
 
+        print("alpha = " + str(alpha) )
+        print("beta = " + str(beta))
+        
         dist = distances + alpha * (1.0 - similarity) # [n, n]
         dist.fill_diagonal_(1e6)
         
         keep_mask = torch.ones(self.features.size(0), dtype=torch.bool)
-        while self.features[keep_mask].shape[0] > max_features:
+        while self.features[keep_mask].shape[0] > max_frames:
             min_index = torch.argmin(dist)
             row, col = divmod(min_index.item(), dist.size(1))
             
@@ -309,6 +320,7 @@ class SpatialFeature:
             "means": self.means[keep_mask],
             "covs": self.covs[keep_mask],
             "intrinsics": self.intrinsics[keep_mask],
+            "sharpness": self.sharpness[keep_mask],
             "image_paths": image_paths[keep_mask.cpu().numpy()].tolist(),
         }
         

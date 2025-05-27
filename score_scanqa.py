@@ -17,8 +17,6 @@ from pycocoevalcap.spice.spice import Spice
 
 from word2number import w2n
 
-from easydict import EasyDict
-
 import re
 
 def remove_there(text):
@@ -157,27 +155,11 @@ def main(args):
     print(score)
     eval_pycoco(data, use_spice=args.use_spice)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base_path", type=str, help="base path")
     parser.add_argument("--pred", type=str, help="path to prediction")
     parser.add_argument("--use_spice", action="store_true")
     args = parser.parse_args()
-
-    CONF = EasyDict()
-
-    # path
-    CONF.PATH = EasyDict()
-    CONF.PATH.BASE = args.base_path
-
-    CONF.PATH.DATA = os.path.join(CONF.PATH.BASE, "data")
-    CONF.PATH.SCANNET = os.path.join(CONF.PATH.DATA, "ScanNet")
-
-    CONF.PATH.SCANNET_SCANS = os.path.join(CONF.PATH.SCANNET, "scans")
-    CONF.PATH.SCANNET_META = os.path.join(CONF.PATH.SCANNET, "meta_data")
-    CONF.PATH.SCANNET_DATA = os.path.join(CONF.PATH.SCANNET, "scannet_data")
-
-    CONF.PATH.SCANQA = os.path.join(CONF.PATH.DATA, "ScanQA", "qa")
     
     main(args)

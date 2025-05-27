@@ -130,7 +130,9 @@ def main(args):
 
     # prediction
     sefile = f"spatial_features_{args.model}_no_merge.npz"
-    
+
+    os.makedirs("results", exist_ok=True)    
+
     if not args.zeroshot:
         outputfile = f"results/predict_scanqa_fewshot_{args.llm}_{args.model}_img{args.image_num}"
     else:
@@ -139,7 +141,7 @@ def main(args):
     if args.nomerge:
         outputfile += "_nomerge"
     else:
-        outputfile += f"_dist{args.merge_dist}_sim{args.merge_sim}"
+        outputfile += f"_a{args.alpha}_b{args.beta}"
     
     if args.nopose:
         outputfile += "_nopose"
@@ -154,8 +156,8 @@ if __name__ == "__main__":
     parser.add_argument("--llm", default="gpt-4o-2024-11-20")
     parser.add_argument("--model", default="vitl336")
     parser.add_argument("--image_num", type=int, default=30)
-    parser.add_argument("--merge_dist", type=float, default=1.0)
-    parser.add_argument("--merge_sim", type=float, default=0.8)
+    parser.add_argument("--alpha", type=float, default=5.0)
+    parser.add_argument("--beta", type=float, default=1.0)
     parser.add_argument("--nomerge", action="store_true")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--nopose", action="store_true")

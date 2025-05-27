@@ -6,7 +6,6 @@ import collections
 import re
 import numpy as np
 
-
 def remove_there(text):
     text = re.sub(r'\b(there are|there is)\b', '', text).strip()
     text = re.sub(r'  ', ' ', text)

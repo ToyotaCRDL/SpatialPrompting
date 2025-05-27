@@ -17,7 +17,7 @@ The provided code implements the following core components from the paper:
 
 - **Dataset Prediction and Evaluation**
   - `predict_scanqa.py` and `predict_sqa3d.py` generate predictions on the ScanQA and SQA3D datasets, respectively.
-  - `score_scanqa.py` and `score_sqa3d.py` evaluate the predictions using metrics such as EM@1, BLEU, METEOR, ROUGE-L, CIDEr, and SPICE.
+  - `score_scanqa.py` and `score_sqa3d.py` evaluate the predictions.
 
 ## Dataset Organization
 
@@ -48,6 +48,13 @@ The code requires the following major dependencies:
 - **EasyDict**
 - Standard libraries (e.g., argparse, glob, json, collections, re)
 
+1. Make sure you have an environment with **PyTorch** installed. You can install it from [https://pytorch.org](https://pytorch.org) according to your system and requirements.
+
+2. Install the required Python packages:
+```bash
+pip install -r requirement.txt
+```
+
 Additionally, set the following environment variables for API access:
 
 ```bash
@@ -59,7 +66,7 @@ export GOOGLE_API_KEY="your_google_api_key"
 
 Each script is designed to be run from the command line with various options.
 
-### 1. Generate Spatial Embeddings
+### 1. Extract Spatial Features
 
 Run `extract_features.py` to extract spatial features from your dataset:
 
@@ -71,9 +78,9 @@ python extract_features.py \
   --model vitl336
 ```
 
-This script reads RGB, depth, and pose files from the specified directory and saves the computed embeddings to an `.npz` file.
+This script reads RGB, depth, and pose files from the specified directory and saves the computed features to an `.npz` file.
 
-### 2. Interactive Spatial QA
+### 2. Interactive Spatial Question Answering
 
 Run `spatialqa.py` to launch an interactive session that answers spatial questions based on the loaded spatial features:
 
@@ -88,7 +95,7 @@ Follow the on-screen prompts to enter your questions.
 
 ### 3. Prediction on ScanQA Dataset
 
-Use `predict_scanqa.py` to generate predictions for the ScanQA dataset. Options allow for few-shot/zero-shot mode, merging settings, and whether to include camera pose information:
+Use `predict_scanqa.py` to generate predictions for the ScanQA dataset:
 
 ```bash
 python predict_scanqa.py \
@@ -102,7 +109,7 @@ The results will be saved in JSONL format.
 
 ### 4. Prediction on SQA3D Dataset
 
-Run `predict_sqa3d.py` for generating predictions on the SQA3D dataset. Adjust options as needed (e.g., few-shot mode):
+Run `predict_sqa3d.py` for generating predictions on the SQA3D dataset:
 
 ```bash
 python predict_sqa3d.py \

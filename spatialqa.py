@@ -140,7 +140,8 @@ class SpatialQA:
             self.messages = [{
                     "role": "user",
                     "content": [
-                        "You will be provided with images captured from specific camera positions and orientations as follows:\n"
+                        "You will be provided images captured from specific camera positions and orientations as follows (z-axis represents up direction):\n"
+                        #"You will be provided with images captured from specific camera positions and orientations as follows:\n"
                     ]
                 }
             ]
@@ -154,17 +155,17 @@ class SpatialQA:
                 "image_paths": [self.spatial_feature.image_paths[i] for i in indices],
             }
         else:
-            self.keyfeatures = self.spatial_feature.merge_features(alpha=args.alpha, beta=args.beta, max_features=args.image_num)
+            self.keyfeatures = self.spatial_feature.extract_keyframes(alpha=args.alpha, beta=args.beta, max_frames=args.image_num)
         
         self.images = []
         self.depths = []
                 
         for i in range(len(self.keyfeatures["image_paths"])):
             T = self.keyfeatures["camera_poses"][i].cpu().numpy()
-            P_T = np.array([[0, -1, 0, 0],
-                            [0, 0, -1, 0],
-                            [1, 0, 0, 0],
-                            [0, 0, 0, 1]], dtype=np.float32)
+            P_T = np.array([[0, 1, 0, 0],
+                                [0, 0, -1, 0],
+                                [1, 0, 0, 0],
+                                [0, 0, 0, 1]], dtype=np.float32)
             T = T @ P_T
             R = T[:3, :3]
             position = T[:3, 3]
@@ -184,8 +185,11 @@ class SpatialQA:
                     + "**Image data**: ")
 
                 self.messages[0]["content"].append(camera_prompt)
+                print(camera_prompt)
+
 
             rgb_path = self.keyfeatures["image_paths"][i]
+            print(rgb_path)
             image = Image.open(rgb_path)
             self.images.append(transforms.ToTensor()(image).unsqueeze(0).cuda())
             width, height = image.size
@@ -220,7 +224,7 @@ class SpatialQA:
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--llm", default="meta-llama/Llama-3.2-11B-Vision-Instruct")
+    parser.add_argument("--llm", default="gpt-4o-2024-11-20")
     parser.add_argument("-feat", "--feature", help="path to spatial embedding")
     parser.add_argument("--image_num", type=int, default=5)
     parser.add_argument("--alpha", type=float, default=5.0)
