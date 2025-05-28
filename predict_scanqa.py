@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 TOYOTA CENTRAL R&D LABS., INC. All Rights Reserved.
+
 import os
 import sys
 import argparse
