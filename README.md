@@ -11,7 +11,7 @@
 Shun **Taguchi**, Hideki **Deguchi**, Takumi **Hamazaki**, Hiroyuki **Sakai**
 
 <div align="center">
-  <img src="assets/qualitative_results.jpg" width="80%" alt="Qualitative Results">
+  <img src="assets/qualitative_results.jpg" width="90%" alt="Qualitative Results">
 </div>
 
 ## Table of Contents
