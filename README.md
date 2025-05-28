@@ -1,7 +1,6 @@
 # SpatialPrompting: Keyframe-driven **Zero-Shot Spatial Reasoning**
 <p align="center">
   <a href="https://arxiv.org/abs/2505.04911"><img src="https://img.shields.io/badge/arXiv-2505.04911-b31b1b.svg" alt="arXiv"></a>
-  <a href="https://github.com/ToyotaCRDL/SpatialPrompting/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ToyotaCRDL/SpatialPrompting.svg" alt="License"></a>
   <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch->=2.5-EE4C2C.svg" alt="PyTorch"></a>
   <a href="https://python.org/"><img src="https://img.shields.io/badge/Python-3.10-blue.svg" alt="Python version"></a>
 </p>
@@ -144,5 +143,5 @@ If you find this project useful in your research, please consider citing:
 }
 ```
 ## License
-
-T.B.D
+This code is released for **non-commercial research use only**.  
+See the full text in the [LICENSE](LICENSE) file.
