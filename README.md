@@ -1,5 +1,3 @@
-修正しました。
-
 # SpatialPrompting: Keyframe-driven **Zero-Shot Spatial Reasoning**
 <p align="center">
   <a href="https://arxiv.org/abs/2505.04911"><img src="https://img.shields.io/badge/arXiv-2505.04911-b31b1b.svg" alt="arXiv"></a>
