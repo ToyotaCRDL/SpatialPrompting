@@ -24,7 +24,7 @@ Shun **Taguchi**, Hideki **Deguchi**, Takumi **Hamazaki**, Hiroyuki **Sakai**
 
 ## Overview
 SpatialPrompting tackles **zero-shot spatial question answering in 3D scenes** by
-1. extracting **keyframes** using spatial and semantic features and  
+1. extracting representative **keyframes** based on spatial and semantic features, and
 2. constructing **LLM prompts** that embed spatial context without any 3D-specific fine-tuning.  
 
 This repository contains:
